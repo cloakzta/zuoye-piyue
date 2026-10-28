@@ -20,7 +20,7 @@
     activeTool: 'pen',
     style: {
       color: '#e53e3e',
-      size: 4,
+      size: 8,
       stamp: 'check'
     },
     isDrawing: false,
@@ -69,9 +69,11 @@
     customColorPicker: document.getElementById('customColorPicker'),
     sizeSlider: document.getElementById('sizeSlider'),
     sizeVal: document.getElementById('sizeVal'),
+    sizePresets: document.querySelectorAll('#sizePresets .size-preset-btn'),
     eraserSizeGroup: document.getElementById('eraserSizeGroup'),
     eraserSizeSlider: document.getElementById('eraserSizeSlider'),
     eraserSizeVal: document.getElementById('eraserSizeVal'),
+    eraserSizePresets: document.querySelectorAll('#eraserSizePresets .size-preset-btn'),
     stampPicker: document.getElementById('stampGroup'),
     stampButtons: document.querySelectorAll('.stamp-btn'),
     colorGroup: document.getElementById('colorGroup'),
@@ -341,6 +343,32 @@
     };
   }
 
+  // ==================== 画笔与橡皮擦粗细控制 ====================
+  function setBrushSize(newSize) {
+    const s = Math.max(1, Math.min(40, newSize));
+    state.style.size = s;
+    if (dom.sizeSlider) dom.sizeSlider.value = s;
+    if (dom.sizeVal) dom.sizeVal.textContent = `${s}px`;
+    if (dom.sizePresets) {
+      dom.sizePresets.forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.size, 10) === s);
+      });
+    }
+  }
+
+  function setEraserSize(newSize) {
+    const s = Math.max(8, Math.min(96, newSize));
+    state.eraserSize = s;
+    if (dom.eraserSizeSlider) dom.eraserSizeSlider.value = s;
+    if (dom.eraserSizeVal) dom.eraserSizeVal.textContent = `${s}px`;
+    if (dom.eraserSizePresets) {
+      dom.eraserSizePresets.forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.size, 10) === s);
+      });
+    }
+    render();
+  }
+
   // ==================== 工具栏与配置绑定 ====================
   function bindToolbar() {
     // 切换工具
@@ -390,16 +418,26 @@
       dom.colorDots.forEach(d => d.classList.remove('active'));
     });
 
-    // 粗细滑块
+    // 粗细预设与滑块联动
+    dom.sizePresets.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        setBrushSize(parseInt(btn.dataset.size, 10));
+      });
+    });
+
     dom.sizeSlider.addEventListener('input', (e) => {
-      state.style.size = parseInt(e.target.value, 10);
-      dom.sizeVal.textContent = `${state.style.size}px`;
+      setBrushSize(parseInt(e.target.value, 10));
+    });
+
+    // 橡皮擦范围预设与滑块联动
+    dom.eraserSizePresets.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        setEraserSize(parseInt(btn.dataset.size, 10));
+      });
     });
 
     dom.eraserSizeSlider.addEventListener('input', (e) => {
-      state.eraserSize = parseInt(e.target.value, 10);
-      dom.eraserSizeVal.textContent = `${state.eraserSize}px`;
-      render();
+      setEraserSize(parseInt(e.target.value, 10));
     });
 
     // 印章选择
@@ -1271,6 +1309,18 @@
         if (state.selectedItem) {
           e.preventDefault();
           deleteSelectedItem();
+        }
+      } else if (e.key === '[') {
+        if (state.activeTool === 'eraser') {
+          setEraserSize(state.eraserSize - 4);
+        } else {
+          setBrushSize(state.style.size - 2);
+        }
+      } else if (e.key === ']') {
+        if (state.activeTool === 'eraser') {
+          setEraserSize(state.eraserSize + 4);
+        } else {
+          setBrushSize(state.style.size + 2);
         }
       }
     });

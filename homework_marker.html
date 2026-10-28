@@ -453,6 +453,53 @@ button:focus-visible {
   border-radius: 50%;
 }
 
+.size-presets {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  padding: 2px;
+  border-radius: var(--radius-pill);
+  gap: 2px;
+  border: 1px solid var(--border-color);
+}
+
+.size-preset-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 3px 8px;
+  min-height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.size-preset-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.size-preset-btn.active {
+  background: #fff;
+  color: var(--primary);
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.preset-dot {
+  display: inline-block;
+  background: currentColor;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .size-slider-wrap {
   display: flex;
   align-items: center;
@@ -926,8 +973,17 @@ button:focus-visible {
     width: 19px;
     height: 19px;
   }
+  .size-presets {
+    padding: 1px;
+    gap: 1px;
+  }
+  .size-preset-btn {
+    padding: 2px 6px;
+    font-size: 10px;
+    min-height: 22px;
+  }
   .size-slider-wrap input[type="range"] {
-    width: 60px;
+    width: 50px;
   }
   .stamp-btn {
     padding: 4px 9px;
@@ -1099,15 +1155,47 @@ button:focus-visible {
       <!-- 粗细选择器 -->
       <div class="prop-group" id="sizeGroup">
         <span class="prop-label">粗细</span>
+        <div class="size-presets" id="sizePresets">
+          <button class="size-preset-btn" data-size="4" title="细 (4px)">
+            <span class="preset-dot" style="width: 4px; height: 4px;"></span>
+            <span class="preset-name">细</span>
+          </button>
+          <button class="size-preset-btn active" data-size="8" title="标准 (8px)">
+            <span class="preset-dot" style="width: 7px; height: 7px;"></span>
+            <span class="preset-name">标准</span>
+          </button>
+          <button class="size-preset-btn" data-size="14" title="粗 (14px)">
+            <span class="preset-dot" style="width: 10px; height: 10px;"></span>
+            <span class="preset-name">粗</span>
+          </button>
+          <button class="size-preset-btn" data-size="24" title="特粗 (24px)">
+            <span class="preset-dot" style="width: 13px; height: 13px;"></span>
+            <span class="preset-name">特粗</span>
+          </button>
+        </div>
         <div class="size-slider-wrap">
-          <input type="range" id="sizeSlider" min="1" max="40" value="4">
-          <span class="size-val" id="sizeVal">4px</span>
+          <input type="range" id="sizeSlider" min="1" max="40" value="8">
+          <span class="size-val" id="sizeVal">8px</span>
         </div>
       </div>
 
       <!-- 橡皮擦范围（仅选择橡皮时展示） -->
       <div class="prop-group" id="eraserSizeGroup" style="display: none;">
         <span class="prop-label">擦除范围</span>
+        <div class="size-presets" id="eraserSizePresets">
+          <button class="size-preset-btn" data-size="16" title="小 (16px)">
+            <span class="preset-dot" style="width: 6px; height: 6px;"></span>
+            <span class="preset-name">小</span>
+          </button>
+          <button class="size-preset-btn active" data-size="32" title="中 (32px)">
+            <span class="preset-dot" style="width: 10px; height: 10px;"></span>
+            <span class="preset-name">中</span>
+          </button>
+          <button class="size-preset-btn" data-size="64" title="大 (64px)">
+            <span class="preset-dot" style="width: 14px; height: 14px;"></span>
+            <span class="preset-name">大</span>
+          </button>
+        </div>
         <div class="size-slider-wrap">
           <input type="range" id="eraserSizeSlider" min="8" max="96" value="32">
           <span class="size-val" id="eraserSizeVal">32px</span>
@@ -1200,7 +1288,7 @@ button:focus-visible {
     activeTool: 'pen',
     style: {
       color: '#e53e3e',
-      size: 4,
+      size: 8,
       stamp: 'check'
     },
     isDrawing: false,
@@ -1249,9 +1337,11 @@ button:focus-visible {
     customColorPicker: document.getElementById('customColorPicker'),
     sizeSlider: document.getElementById('sizeSlider'),
     sizeVal: document.getElementById('sizeVal'),
+    sizePresets: document.querySelectorAll('#sizePresets .size-preset-btn'),
     eraserSizeGroup: document.getElementById('eraserSizeGroup'),
     eraserSizeSlider: document.getElementById('eraserSizeSlider'),
     eraserSizeVal: document.getElementById('eraserSizeVal'),
+    eraserSizePresets: document.querySelectorAll('#eraserSizePresets .size-preset-btn'),
     stampPicker: document.getElementById('stampGroup'),
     stampButtons: document.querySelectorAll('.stamp-btn'),
     colorGroup: document.getElementById('colorGroup'),
@@ -1521,6 +1611,32 @@ button:focus-visible {
     };
   }
 
+  // ==================== 画笔与橡皮擦粗细控制 ====================
+  function setBrushSize(newSize) {
+    const s = Math.max(1, Math.min(40, newSize));
+    state.style.size = s;
+    if (dom.sizeSlider) dom.sizeSlider.value = s;
+    if (dom.sizeVal) dom.sizeVal.textContent = `${s}px`;
+    if (dom.sizePresets) {
+      dom.sizePresets.forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.size, 10) === s);
+      });
+    }
+  }
+
+  function setEraserSize(newSize) {
+    const s = Math.max(8, Math.min(96, newSize));
+    state.eraserSize = s;
+    if (dom.eraserSizeSlider) dom.eraserSizeSlider.value = s;
+    if (dom.eraserSizeVal) dom.eraserSizeVal.textContent = `${s}px`;
+    if (dom.eraserSizePresets) {
+      dom.eraserSizePresets.forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.size, 10) === s);
+      });
+    }
+    render();
+  }
+
   // ==================== 工具栏与配置绑定 ====================
   function bindToolbar() {
     // 切换工具
@@ -1570,16 +1686,26 @@ button:focus-visible {
       dom.colorDots.forEach(d => d.classList.remove('active'));
     });
 
-    // 粗细滑块
+    // 粗细预设与滑块联动
+    dom.sizePresets.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        setBrushSize(parseInt(btn.dataset.size, 10));
+      });
+    });
+
     dom.sizeSlider.addEventListener('input', (e) => {
-      state.style.size = parseInt(e.target.value, 10);
-      dom.sizeVal.textContent = `${state.style.size}px`;
+      setBrushSize(parseInt(e.target.value, 10));
+    });
+
+    // 橡皮擦范围预设与滑块联动
+    dom.eraserSizePresets.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        setEraserSize(parseInt(btn.dataset.size, 10));
+      });
     });
 
     dom.eraserSizeSlider.addEventListener('input', (e) => {
-      state.eraserSize = parseInt(e.target.value, 10);
-      dom.eraserSizeVal.textContent = `${state.eraserSize}px`;
-      render();
+      setEraserSize(parseInt(e.target.value, 10));
     });
 
     // 印章选择
@@ -2451,6 +2577,18 @@ button:focus-visible {
         if (state.selectedItem) {
           e.preventDefault();
           deleteSelectedItem();
+        }
+      } else if (e.key === '[') {
+        if (state.activeTool === 'eraser') {
+          setEraserSize(state.eraserSize - 4);
+        } else {
+          setBrushSize(state.style.size - 2);
+        }
+      } else if (e.key === ']') {
+        if (state.activeTool === 'eraser') {
+          setEraserSize(state.eraserSize + 4);
+        } else {
+          setBrushSize(state.style.size + 2);
         }
       }
     });

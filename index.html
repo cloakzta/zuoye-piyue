@@ -122,15 +122,47 @@
       <!-- 粗细选择器 -->
       <div class="prop-group" id="sizeGroup">
         <span class="prop-label">粗细</span>
+        <div class="size-presets" id="sizePresets">
+          <button class="size-preset-btn" data-size="4" title="细 (4px)">
+            <span class="preset-dot" style="width: 4px; height: 4px;"></span>
+            <span class="preset-name">细</span>
+          </button>
+          <button class="size-preset-btn active" data-size="8" title="标准 (8px)">
+            <span class="preset-dot" style="width: 7px; height: 7px;"></span>
+            <span class="preset-name">标准</span>
+          </button>
+          <button class="size-preset-btn" data-size="14" title="粗 (14px)">
+            <span class="preset-dot" style="width: 10px; height: 10px;"></span>
+            <span class="preset-name">粗</span>
+          </button>
+          <button class="size-preset-btn" data-size="24" title="特粗 (24px)">
+            <span class="preset-dot" style="width: 13px; height: 13px;"></span>
+            <span class="preset-name">特粗</span>
+          </button>
+        </div>
         <div class="size-slider-wrap">
-          <input type="range" id="sizeSlider" min="1" max="40" value="4">
-          <span class="size-val" id="sizeVal">4px</span>
+          <input type="range" id="sizeSlider" min="1" max="40" value="8">
+          <span class="size-val" id="sizeVal">8px</span>
         </div>
       </div>
 
       <!-- 橡皮擦范围（仅选择橡皮时展示） -->
       <div class="prop-group" id="eraserSizeGroup" style="display: none;">
         <span class="prop-label">擦除范围</span>
+        <div class="size-presets" id="eraserSizePresets">
+          <button class="size-preset-btn" data-size="16" title="小 (16px)">
+            <span class="preset-dot" style="width: 6px; height: 6px;"></span>
+            <span class="preset-name">小</span>
+          </button>
+          <button class="size-preset-btn active" data-size="32" title="中 (32px)">
+            <span class="preset-dot" style="width: 10px; height: 10px;"></span>
+            <span class="preset-name">中</span>
+          </button>
+          <button class="size-preset-btn" data-size="64" title="大 (64px)">
+            <span class="preset-dot" style="width: 14px; height: 14px;"></span>
+            <span class="preset-name">大</span>
+          </button>
+        </div>
         <div class="size-slider-wrap">
           <input type="range" id="eraserSizeSlider" min="8" max="96" value="32">
           <span class="size-val" id="eraserSizeVal">32px</span>
