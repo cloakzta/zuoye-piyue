@@ -1564,6 +1564,38 @@
       targetCtx.textAlign = 'center';
       targetCtx.textBaseline = 'middle';
       targetCtx.fillText('阅', 0, 1);
+    } else if (stampType === 'teacher_read') {
+      // ⭐ 白老师已阅 (名师双线圆角红印章)
+      targetCtx.strokeStyle = '#e53e3e';
+      targetCtx.fillStyle = '#e53e3e';
+      targetCtx.lineWidth = 2.5;
+
+      // 外圆角边框
+      const w = 44, h = 26;
+      if (typeof targetCtx.roundRect === 'function') {
+        targetCtx.beginPath();
+        targetCtx.roundRect(-w, -h, w * 2, h * 2, 7);
+        targetCtx.stroke();
+        // 内细线框
+        targetCtx.lineWidth = 1;
+        targetCtx.beginPath();
+        targetCtx.roundRect(-w + 3.5, -h + 3.5, (w - 3.5) * 2, (h - 3.5) * 2, 4);
+        targetCtx.stroke();
+      } else {
+        targetCtx.strokeRect(-w, -h, w * 2, h * 2);
+        targetCtx.lineWidth = 1;
+        targetCtx.strokeRect(-w + 3.5, -h + 3.5, (w - 3.5) * 2, (h - 3.5) * 2);
+      }
+
+      // 顶部小字：白老师培优
+      targetCtx.font = 'bold 10px "PingFang SC", "Microsoft YaHei", sans-serif';
+      targetCtx.textAlign = 'center';
+      targetCtx.textBaseline = 'middle';
+      targetCtx.fillText('白老师培优', 0, -10);
+
+      // 底部大字：已 阅
+      targetCtx.font = 'bold 17px "PingFang SC", "Microsoft YaHei", sans-serif';
+      targetCtx.fillText('已 阅', 0, 9);
     } else if (stampType === 'question') {
       // 疑问印章
       targetCtx.font = 'bold 36px sans-serif';
@@ -1579,7 +1611,8 @@
   // ==================== 通用图元选中、缩放、旋转与清除 ====================
   const STAMP_BASE_SIZES = {
     check: { w: 46, h: 42 }, cross: { w: 38, h: 38 }, score100: { w: 76, h: 54 },
-    great: { w: 72, h: 46 }, read: { w: 56, h: 56 }, question: { w: 42, h: 52 }
+    great: { w: 72, h: 46 }, read: { w: 56, h: 56 }, teacher_read: { w: 92, h: 56 },
+    question: { w: 42, h: 52 }
   };
 
   function getItemBounds(item) {

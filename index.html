@@ -3,16 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>作业批改助手 - 轻量图片在线批阅与导出</title>
+  <title>白老师数学培优课堂 - 专属作业批阅系统</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <!-- 顶栏导航 -->
   <header class="app-header">
     <div class="header-left">
-      <div class="app-logo">
-        <span class="logo-icon">✏️</span>
-        <span class="logo-title">作业批阅助手</span>
+      <div class="app-logo teacher-brand-logo">
+        <div class="teacher-avatar-badge">
+          <img src="assets/teacher_avatar.png" alt="白老师" class="teacher-avatar-img">
+          <span class="cert-badge" title="特级名师认证">★</span>
+        </div>
+        <div class="brand-text-wrap">
+          <div class="brand-title-row">
+            <span class="logo-title">白老师数学培优课堂</span>
+            <span class="brand-tag">名师专属</span>
+          </div>
+          <span class="brand-subtitle">专注高阶思维 · 严谨批改讲评</span>
+        </div>
       </div>
       <div class="doc-info" id="docInfo" style="display: none;">
         <span class="filename" id="docFilename">未命名作业</span>
@@ -175,6 +184,7 @@
         <div class="stamp-picker">
           <button class="stamp-btn active" data-stamp="check" title="正确 (对勾)">✔ 正确</button>
           <button class="stamp-btn" data-stamp="cross" title="错误 (打叉)">✘ 订正</button>
+          <button class="stamp-btn teacher-stamp-btn" data-stamp="teacher_read" title="白老师已阅">⭐ 白老师已阅</button>
           <button class="stamp-btn" data-stamp="score100" title="100分">💯 100</button>
           <button class="stamp-btn" data-stamp="great" title="优秀">👍 优秀</button>
           <button class="stamp-btn" data-stamp="read" title="已阅">⭐ 阅</button>
@@ -202,15 +212,80 @@
 
     <!-- 画布容器 -->
     <div class="canvas-viewport" id="canvasViewport">
-      <!-- 初始空状态引导区 -->
-      <div class="drop-zone" id="dropZone">
-        <div class="drop-icon">📑</div>
-        <h2>导入作业图片开始批阅</h2>
-        <p>点击选择文件、直接拖入作业图片，或按 <strong>Ctrl+V / Cmd+V</strong> 粘贴截图</p>
-        <label class="action-btn primary large" id="btnSelectFilePrompt" for="fileInput" role="button" title="点击选择作业图片">
-          选择作业图片 (支持多选)
-        </label>
-        <div class="drop-hint">支持 JPG、PNG、WebP 等常见图片格式，保持高保真分辨率</div>
+      <!-- 初始空状态引导区：白老师数学培优课堂专属主题布局 -->
+      <div class="drop-zone teacher-theme-welcome" id="dropZone">
+        <div class="welcome-container">
+          <!-- 左侧：白老师名师立绘形象展示 -->
+          <div class="teacher-showcase">
+            <div class="teacher-figure-wrap">
+              <img src="assets/teacher_full.png" alt="白老师" class="teacher-figure-img">
+              <div class="figure-shadow"></div>
+              <!-- 漂浮装饰数学微符号 -->
+              <span class="math-badge m-b1">∑</span>
+              <span class="math-badge m-b2">π</span>
+              <span class="math-badge m-b3">f(x)</span>
+              <span class="math-badge m-b4">Δ</span>
+            </div>
+            <div class="teacher-nameplate">
+              <span class="nameplate-title">白老师 · 特级数学</span>
+              <span class="nameplate-desc">专注思维培优 · 严谨批改</span>
+            </div>
+          </div>
+
+          <!-- 右侧：欢迎主控区与作业导入 -->
+          <div class="welcome-main">
+            <div class="welcome-header">
+              <div class="welcome-badge">📐 白老师数学培优课堂 · 教学批阅系统</div>
+              <h2 class="welcome-title">精细批阅每一道习题，启发数学高阶思维</h2>
+              <p class="welcome-desc">专为数学作业批改、错题订正与步骤解析打造，支持原笔迹书写、几何框选与一键反馈家长</p>
+            </div>
+
+            <!-- 上传行动区 -->
+            <div class="upload-action-box">
+              <label class="action-btn primary large welcome-upload-btn" id="btnSelectFilePrompt" for="fileInput" role="button">
+                <svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align:-4px;margin-right:6px;"><path fill="currentColor" d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+                选择学生作业照片 (可批量多选)
+              </label>
+              <div class="drag-paste-tip">
+                <span>或直接将图片<strong>拖入此窗口</strong></span>
+                <span class="tip-sep">|</span>
+                <span>支持 <strong>Ctrl+V / Cmd+V</strong> 粘贴微信截图</span>
+              </div>
+            </div>
+
+            <!-- 四大课堂特色看板 -->
+            <div class="features-grid">
+              <div class="feature-card">
+                <div class="f-icon">📐</div>
+                <div class="f-text">
+                  <div class="f-title">几何规范圈选</div>
+                  <div class="f-desc">方框/圆圈/箭头，精准指出运算漏洞与推导关键</div>
+                </div>
+              </div>
+              <div class="feature-card">
+                <div class="f-icon">🖊️</div>
+                <div class="f-text">
+                  <div class="f-title">名师适中笔触</div>
+                  <div class="f-desc">预设 8px 黄金线宽，红笔批阅、绿笔订正、荧光划重点</div>
+                </div>
+              </div>
+              <div class="feature-card">
+                <div class="f-icon">⭐</div>
+                <div class="f-text">
+                  <div class="f-title">白老师专属印章</div>
+                  <div class="f-desc">一键加盖正确、订正、💯100 与【白老师已阅】</div>
+                </div>
+              </div>
+              <div class="feature-card">
+                <div class="f-icon">📤</div>
+                <div class="f-text">
+                  <div class="f-title">秒级微信反馈</div>
+                  <div class="f-desc">一键复制批改图或导出高清原图，反馈家长超省心</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- 核心画布元素 -->
