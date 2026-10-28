@@ -42,7 +42,8 @@
     itemInteraction: null, // { mode: 'move'|'resize'|'rotate', item, ... }
     eraseUndoPushed: false, // 本次橡皮擦拖动是否已记录撤销点
     eraserSize: 32,
-    pointer: { x: 0, y: 0, visible: false }
+    pointer: { x: 0, y: 0, visible: false },
+    lastTextTap: { item: null, time: 0 } // 文字工具双击检测
   };
 
   // DOM 元素缓存
@@ -413,7 +414,7 @@
         dom.toolButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         state.activeTool = btn.dataset.tool;
-        if (state.activeTool !== 'stamp' && state.selectedItem) {
+        if (state.activeTool !== 'stamp' && state.activeTool !== 'text' && state.selectedItem) {
           state.selectedItem = null;
           updateSelectedStampUI();
           render();
@@ -651,7 +652,7 @@
       const worldPos = screenToWorld(sx, sy);
 
       // 1. 优先处理当前选中图元的控制点：删除、缩放、旋转、移动
-      if (state.activeTool === 'stamp' && state.selectedItem && state.selectedItem.type === 'stamp') {
+      if ((state.activeTool === 'stamp' || state.activeTool === 'text') && state.selectedItem) {
         const handleHit = hitTestItemHandles(state.selectedItem, sx, sy);
         if (handleHit) {
           if (handleHit.type === 'delete') {
@@ -674,9 +675,29 @@
         }
       }
 
-      // 2. 点击任意已有批注即可选中并拖动
-      const clickedItem = state.activeTool === 'stamp' ? hitTestAnyStamp(worldPos.x, worldPos.y) : null;
+      // 2. 点击任意已有批注即可选中并拖动（印章工具仅限印章，文字工具支持所有类型）
+      const clickedItem = state.activeTool === 'stamp' ? hitTestAnyStamp(worldPos.x, worldPos.y)
+                        : state.activeTool === 'text' ? hitTestAnyItem(worldPos.x, worldPos.y)
+                        : null;
       if (clickedItem) {
+        // 文字工具下双击已选中的文字图元 → 编辑文字内容
+        if (state.activeTool === 'text' && clickedItem.type === 'text') {
+          const now = Date.now();
+          if (state.lastTextTap.item === clickedItem && now - state.lastTextTap.time < 400) {
+            // 双击：弹出编辑框，预填当前文字
+            state.lastTextTap = { item: null, time: 0 };
+            const newText = prompt('编辑文字内容：', clickedItem.text || '');
+            if (newText !== null && newText.trim()) {
+              pushUndo();
+              clickedItem.text = newText.trim();
+              updateUndoRedoUI();
+              render();
+            }
+            return;
+          }
+          state.lastTextTap = { item: clickedItem, time: now };
+        }
+
         state.selectedItem = clickedItem;
         updateSelectedStampUI();
         pushUndo();
@@ -691,11 +712,13 @@
         return;
       }
 
-      // 3. 点击了空白区域：如果之前有选中印章，先取消选中
+      // 3. 点击了空白区域：如果之前有选中图元，先取消选中
       if (state.selectedItem) {
         state.selectedItem = null;
         updateSelectedStampUI();
         render();
+        // 文字工具下，取消选中后不立即新建文字，需要再次点击空白区域才新建
+        if (state.activeTool === 'text') return;
       }
 
       // 印章工具：单次点击落印，并自动框选该新印章方便直接放大缩小或调整
@@ -717,7 +740,7 @@
         return;
       }
 
-      // 文字工具：弹出即时输入框
+      // 文字工具：在空白区域点击弹出输入框新建文字
       if (state.activeTool === 'text') {
         const text = prompt('请输入批改评语/分值：', '');
         if (text && text.trim()) {
@@ -731,7 +754,7 @@
             size: Math.max(state.style.size * 5, 20)
           };
           cur.annotations.push(newText);
-          state.selectedItem = null;
+          state.selectedItem = newText;
           updateSelectedStampUI();
           updateUndoRedoUI();
           render();
@@ -880,11 +903,11 @@
             return;
           }
         }
-        if (hitTestAnyItem(worldPos.x, worldPos.y)) {
+        if ((state.activeTool === 'stamp' || state.activeTool === 'text') && hitTestAnyItem(worldPos.x, worldPos.y)) {
           vp.style.cursor = 'pointer';
           return;
         }
-        vp.style.cursor = (state.activeTool === 'pan') ? 'grab' : 'crosshair';
+        vp.style.cursor = (state.activeTool === 'pan') ? 'grab' : (state.activeTool === 'text') ? 'text' : 'crosshair';
       }
 
       if (!state.isDrawing) return;
@@ -1426,7 +1449,7 @@
     }
 
     // 4. 绘制选中图元的高亮框、缩放/旋转/删除控制点
-    if (state.selectedItem && state.selectedItem.type === 'stamp') {
+    if (state.selectedItem) {
       drawSelectionBox(ctx, state.selectedItem);
     }
 
