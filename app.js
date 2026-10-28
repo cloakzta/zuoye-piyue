@@ -110,10 +110,8 @@
     bindImageImport();
     bindShortcuts();
 
-    // 移动端在空状态下默认收起工具栏，避免遮挡欢迎卡片
-    if (window.innerWidth <= 768 && state.images.length === 0) {
-      setToolbarCollapsed(true);
-    }
+    // 默认保持批注栏展开打开状态
+    setToolbarCollapsed(false);
 
     render();
   }
@@ -278,7 +276,6 @@
       state.currentIndex = -1;
       dom.dropZone.style.display = 'flex';
       if (dom.floatingProps) dom.floatingProps.style.display = 'none';
-      if (window.innerWidth <= 768) setToolbarCollapsed(true);
       updateThumbnails();
       updateDocInfo();
       render();

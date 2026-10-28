@@ -1351,12 +1351,25 @@ button:focus-visible {
   .header-right #btnCopyImage { display: inline-flex; }
   .floating-props { z-index: 45; }
 
-  /* 移动端左侧工具栏及折叠把手 */
+  /* 移动端左侧批注工具栏及折叠把手 (紧凑舒适，默认展开) */
   .floating-toolbar {
-    left: 8px;
+    left: 6px;
+    padding: 5px;
+    gap: 2px;
+  }
+  .floating-toolbar .tool-btn {
+    width: 48px;
+    height: 44px;
+    gap: 1px;
+  }
+  .floating-toolbar .tool-icon {
+    font-size: 16px;
+  }
+  .floating-toolbar .tool-name {
+    font-size: 9px;
   }
   .floating-toolbar.collapsed {
-    transform: translateY(-50%) translateX(calc(-100% - 8px));
+    transform: translateY(-50%) translateX(calc(-100% - 6px));
   }
   .toolbar-toggle-btn {
     right: -22px;
@@ -1381,8 +1394,8 @@ button:focus-visible {
   }
   .teacher-big-avatar-wrap {
     position: relative;
-    width: 84px;
-    height: 84px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     padding: 3px;
     background: linear-gradient(135deg, #f59e0b, #d97706, #1d4ed8);
@@ -1415,14 +1428,15 @@ button:focus-visible {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
 
+  /* 移动端欢迎卡片：左侧留出 68px 安全避让区，确保批注栏默认展开时内容完全无遮挡 */
   .drop-zone.teacher-theme-welcome {
-    inset: 8px;
-    padding: 16px 14px;
-    max-height: calc(100% - 16px);
+    inset: 6px;
+    padding: 14px 10px 14px 68px;
+    max-height: calc(100% - 12px);
   }
   .welcome-container {
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     text-align: center;
   }
   .teacher-showcase {
@@ -1432,7 +1446,7 @@ button:focus-visible {
   .welcome-main {
     align-items: center;
     text-align: center;
-    gap: 12px;
+    gap: 10px;
   }
   .welcome-badge {
     align-self: center;
