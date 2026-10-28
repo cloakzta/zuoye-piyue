@@ -415,8 +415,16 @@
         dom.toolButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         state.activeTool = btn.dataset.tool;
-        if (state.activeTool !== 'stamp' && state.activeTool !== 'text' && state.selectedItem) {
+
+        // 切换离开图元编辑工具时，必须彻底结束旧的图元交互状态。
+        // 否则残留的 itemInteraction 会在后续 pointermove 中继续移动/缩放文字，
+        // 导致画笔、框选、箭头、橡皮擦等工具全部失效。
+        if (state.activeTool !== 'stamp' && state.activeTool !== 'text') {
           state.selectedItem = null;
+          state.itemInteraction = null;
+          state.isDrawing = false;
+          state.currentDraft = null;
+          state.lastTextTap = { item: null, time: 0 };
           updateSelectedStampUI();
           render();
         }
@@ -652,6 +660,11 @@
       if (!cur) return;
 
       const worldPos = screenToWorld(sx, sy);
+
+      // 防御性清理：如果工具已经切换，或选中图元已不存在，不能继续沿用旧交互。
+      if (state.activeTool !== 'stamp' && state.activeTool !== 'text') {
+        state.itemInteraction = null;
+      }
 
       // 0. 优先处理当前选中图元的控制点：删除、缩放、旋转、移动
       if ((state.activeTool === 'stamp' || state.activeTool === 'text') && state.selectedItem) {
