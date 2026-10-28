@@ -1,6 +1,8 @@
 # 作业批阅助手 (Homework Marker)
 
-> 轻量、高保真、开箱即用的在线作业批改与图片矢量批注工具。纯原生前端技术栈（HTML5 + Canvas + ES6），零后端、零依赖，支持浏览器双击即用与局域网/Tailscale 跨端访问。
+> 轻量、高保真、开箱即用的在线作业批改与图片矢量批注工具。纯原生前端技术栈（HTML5 + Canvas + ES6），零后端、零依赖，开箱即用。
+
+🌐 **在线体验 Demo**：[https://cloakzta.github.io/zuoye-piyue/](https://cloakzta.github.io/zuoye-piyue/)
 
 ---
 
