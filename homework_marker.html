@@ -9,6 +9,20 @@
    作业批改助手 - 现代极简风格 CSS (UI Refresh)
    ========================================================================== */
 
+/* 应用内对话框 */
+.app-dialog-backdrop { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px; background: rgba(15, 23, 42, .38); backdrop-filter: blur(3px); }
+.app-dialog-backdrop[hidden] { display: none; }
+.app-dialog { width: min(420px, 100%); box-sizing: border-box; padding: 22px; border: 1px solid rgba(255,255,255,.75); border-radius: 18px; background: #fff; box-shadow: 0 18px 60px rgba(15,23,42,.25); }
+.app-dialog h3 { margin: 0 0 8px; color: #1e293b; font-size: 18px; }
+.app-dialog p { margin: 0 0 16px; color: #64748b; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+.app-dialog-input { display: block; width: 100%; box-sizing: border-box; min-height: 42px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; outline: none; color: #1e293b; font: inherit; }
+.app-dialog-input:focus { border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49,130,206,.14); }
+.app-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+.dialog-btn { min-width: 72px; padding: 9px 16px; border: 0; border-radius: 9px; cursor: pointer; font: inherit; }
+.dialog-btn.secondary { color: #475569; background: #eef2f7; }
+.dialog-btn.primary { color: #fff; background: #3182ce; }
+.dialog-btn:hover { filter: brightness(.96); }
+
 :root {
   --bg-app: #f4f6fa;
   --bg-surface: rgba(255, 255, 255, 0.92);
@@ -1781,6 +1795,19 @@ button:focus-visible {
     </footer>
   </main>
 
+  <!-- 应用内对话框：避免使用浏览器原生 alert / prompt / confirm -->
+  <div class="app-dialog-backdrop" id="appDialog" hidden>
+    <div class="app-dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+      <h3 id="dialogTitle">提示</h3>
+      <p id="dialogMessage"></p>
+      <input id="dialogInput" class="app-dialog-input" type="text" autocomplete="off">
+      <div class="app-dialog-actions">
+        <button type="button" class="dialog-btn secondary" id="dialogCancel">取消</button>
+        <button type="button" class="dialog-btn primary" id="dialogConfirm">确定</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 提示弹窗 (Toast) -->
   <div class="toast-container" id="toastContainer"></div>
 
@@ -2291,10 +2318,10 @@ button:focus-visible {
     dom.btnRedo.addEventListener('click', redo);
 
     // 清空批注
-    dom.btnClearAnnotations.addEventListener('click', () => {
+    dom.btnClearAnnotations.addEventListener('click', async () => {
       const cur = state.images[state.currentIndex];
       if (!cur || cur.annotations.length === 0) return;
-      if (confirm('确定清空当前作业的所有批注？')) {
+      if (await showConfirmDialog('确定清空当前作业的所有批注？')) {
         pushUndo();
         cur.annotations = [];
         state.selectedItem = null;
@@ -2384,7 +2411,7 @@ button:focus-visible {
     });
 
     // PointerDown
-    vp.addEventListener('pointerdown', (e) => {
+    vp.addEventListener('pointerdown', async (e) => {
       if (e.target !== dom.canvas && e.target !== vp) return;
       vp.setPointerCapture(e.pointerId);
 
@@ -2506,7 +2533,7 @@ button:focus-visible {
 
       // 文字工具：弹出即时输入框
       if (state.activeTool === 'text') {
-        const text = prompt('请输入批改评语/分值：', '');
+        const text = await showInputDialog('请输入批改评语或分值：', '');
         if (text && text.trim()) {
           pushUndo();
           const newText = {
@@ -3643,6 +3670,52 @@ button:focus-visible {
   }
 
   // ==================== 提示组件 ====================
+  function showAppDialog({ title = '提示', message = '', input = false, value = '' } = {}) {
+    const modal = document.getElementById('appDialog');
+    const titleEl = document.getElementById('dialogTitle');
+    const messageEl = document.getElementById('dialogMessage');
+    const inputEl = document.getElementById('dialogInput');
+    const cancelEl = document.getElementById('dialogCancel');
+    const confirmEl = document.getElementById('dialogConfirm');
+    if (!modal || !titleEl || !messageEl || !inputEl || !cancelEl || !confirmEl) return Promise.resolve(null);
+
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    inputEl.value = value;
+    inputEl.hidden = !input;
+    cancelEl.textContent = input ? '取消' : '否';
+    confirmEl.textContent = input ? '确定' : '是';
+    modal.hidden = false;
+
+    return new Promise(resolve => {
+      let finished = false;
+      const close = result => {
+        if (finished) return;
+        finished = true;
+        modal.hidden = true;
+        cancelEl.onclick = null;
+        confirmEl.onclick = null;
+        modal.onkeydown = null;
+        resolve(result);
+      };
+      cancelEl.onclick = () => close(input ? null : false);
+      confirmEl.onclick = () => close(input ? inputEl.value : true);
+      modal.onkeydown = event => {
+        if (event.key === 'Escape') close(input ? null : false);
+        if (event.key === 'Enter' && input) close(inputEl.value);
+      };
+      setTimeout(() => (input ? inputEl : confirmEl).focus(), 0);
+    });
+  }
+
+  function showInputDialog(message, value = '') {
+    return showAppDialog({ title: '编辑批注', message, input: true, value });
+  }
+
+  function showConfirmDialog(message) {
+    return showAppDialog({ title: '请确认', message, input: false });
+  }
+
   function showToast(message) {
     const toast = document.createElement('div');
     toast.className = 'toast';

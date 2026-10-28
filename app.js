@@ -54,6 +54,7 @@
     fileInput: document.getElementById('fileInput'),
     btnImport: document.getElementById('btnImport'),
     btnExport: document.getElementById('btnExport'),
+    btnShare: document.getElementById('btnShare'),
     btnCopyImage: document.getElementById('btnCopyImage'),
     btnUndo: document.getElementById('btnUndo'),
     btnRedo: document.getElementById('btnRedo'),
@@ -505,10 +506,10 @@
     dom.btnRedo.addEventListener('click', redo);
 
     // 清空批注
-    dom.btnClearAnnotations.addEventListener('click', () => {
+    dom.btnClearAnnotations.addEventListener('click', async () => {
       const cur = state.images[state.currentIndex];
       if (!cur || cur.annotations.length === 0) return;
-      if (confirm('确定清空当前作业的所有批注？')) {
+      if (await showConfirmDialog('确定清空当前作业的所有批注？')) {
         pushUndo();
         cur.annotations = [];
         state.selectedItem = null;
@@ -519,9 +520,10 @@
       }
     });
 
-    // 导出与复制
+    // 导出、复制与分享
     dom.btnExport.addEventListener('click', exportMergedImage);
     dom.btnCopyImage.addEventListener('click', copyMergedImageToClipboard);
+    if (dom.btnShare) dom.btnShare.addEventListener('click', shareMergedImage);
 
     // 选中印章的放大、缩小与清除
     if (dom.btnScaleUp) {
@@ -598,7 +600,7 @@
     });
 
     // PointerDown
-    vp.addEventListener('pointerdown', (e) => {
+    vp.addEventListener('pointerdown', async (e) => {
       if (e.target !== dom.canvas && e.target !== vp) return;
       vp.setPointerCapture(e.pointerId);
 
@@ -651,10 +653,11 @@
 
       const worldPos = screenToWorld(sx, sy);
 
-      // 1. 优先处理当前选中图元的控制点：删除、缩放、旋转、移动
+      // 0. 优先处理当前选中图元的控制点：删除、缩放、旋转、移动
       if ((state.activeTool === 'stamp' || state.activeTool === 'text') && state.selectedItem) {
         const handleHit = hitTestItemHandles(state.selectedItem, sx, sy);
-        if (handleHit) {
+        if (handleHit && handleHit.type !== 'move') {
+          state.lastTextTap = { item: null, time: 0 };
           if (handleHit.type === 'delete') {
             deleteSelectedItem();
             return;
@@ -675,29 +678,40 @@
         }
       }
 
+      // 1. 全局双击文字检测：任何工具下双击文字标注都可编辑
+      const dblTapTextItem = hitTestAnyItem(worldPos.x, worldPos.y);
+      if (dblTapTextItem && dblTapTextItem.type === 'text') {
+        const now = Date.now();
+        if (state.lastTextTap.item === dblTapTextItem && now - state.lastTextTap.time < 400) {
+          state.lastTextTap = { item: null, time: 0 };
+          const newText = await showInputDialog('请输入新的批改评语或分值：', dblTapTextItem.text || '');
+          if (newText !== null && newText.trim()) {
+            pushUndo();
+            dblTapTextItem.text = newText.trim();
+            state.selectedItem = dblTapTextItem;
+            updateSelectedStampUI();
+            updateUndoRedoUI();
+            render();
+          }
+          return;
+        }
+        state.lastTextTap = { item: dblTapTextItem, time: now };
+        // 其他绘图工具点击文字时不启动绘制，避免第一次点击双击目标就留下笔迹
+        if (state.activeTool !== 'text' && state.activeTool !== 'stamp') {
+          state.selectedItem = dblTapTextItem;
+          updateSelectedStampUI();
+          render();
+          return;
+        }
+      } else {
+        state.lastTextTap = { item: null, time: 0 };
+      }
+
       // 2. 点击任意已有批注即可选中并拖动（印章工具仅限印章，文字工具支持所有类型）
       const clickedItem = state.activeTool === 'stamp' ? hitTestAnyStamp(worldPos.x, worldPos.y)
                         : state.activeTool === 'text' ? hitTestAnyItem(worldPos.x, worldPos.y)
                         : null;
       if (clickedItem) {
-        // 文字工具下双击已选中的文字图元 → 编辑文字内容
-        if (state.activeTool === 'text' && clickedItem.type === 'text') {
-          const now = Date.now();
-          if (state.lastTextTap.item === clickedItem && now - state.lastTextTap.time < 400) {
-            // 双击：弹出编辑框，预填当前文字
-            state.lastTextTap = { item: null, time: 0 };
-            const newText = prompt('编辑文字内容：', clickedItem.text || '');
-            if (newText !== null && newText.trim()) {
-              pushUndo();
-              clickedItem.text = newText.trim();
-              updateUndoRedoUI();
-              render();
-            }
-            return;
-          }
-          state.lastTextTap = { item: clickedItem, time: now };
-        }
-
         state.selectedItem = clickedItem;
         updateSelectedStampUI();
         pushUndo();
@@ -742,7 +756,7 @@
 
       // 文字工具：在空白区域点击弹出输入框新建文字
       if (state.activeTool === 'text') {
-        const text = prompt('请输入批改评语/分值：', '');
+        const text = await showInputDialog('请输入批改评语或分值：', '');
         if (text && text.trim()) {
           pushUndo();
           const newText = {
@@ -1680,6 +1694,14 @@
     question: { w: 42, h: 52 }
   };
 
+  // 精确测量文字宽度（使用离屏 Canvas measureText）
+  const _measureCanvas = document.createElement('canvas');
+  const _measureCtx = _measureCanvas.getContext('2d');
+  function measureTextWidth(text, size) {
+    _measureCtx.font = `bold ${size}px sans-serif`;
+    return _measureCtx.measureText(text).width;
+  }
+
   function getItemBounds(item) {
     if (item.type === 'stamp') {
       const b = STAMP_BASE_SIZES[item.stampType] || { w: 50, h: 50 };
@@ -1690,8 +1712,9 @@
     if (item.type === 'circle') return { minX: item.cx-item.rx, maxX: item.cx+item.rx, minY: item.cy-item.ry, maxY: item.cy+item.ry };
     if (item.type === 'arrow') return { minX: Math.min(item.x1,item.x2), maxX: Math.max(item.x1,item.x2), minY: Math.min(item.y1,item.y2), maxY: Math.max(item.y1,item.y2) };
     if (item.type === 'text') {
-      const w = Math.max(24, (item.text || '').length * item.size * 0.62);
-      return { minX: item.x, maxX: item.x+w, minY: item.y-item.size, maxY: item.y+5 };
+      const w = Math.max(24, measureTextWidth(item.text || '', item.size));
+      const h = item.size * 1.15; // 行高略大于字号
+      return { minX: item.x, maxX: item.x + w, minY: item.y - h, maxY: item.y + item.size * 0.1 };
     }
     if (item.type === 'path' && item.points && item.points.length) {
       const xs=item.points.map(p=>p.x), ys=item.points.map(p=>p.y);
@@ -1878,7 +1901,92 @@
     }, 'image/png');
   }
 
+  function shareMergedImage() {
+    const cur = state.images[state.currentIndex];
+    if (!cur) {
+      showToast('请先导入作业图片');
+      return;
+    }
+
+    const offCanvas = generateMergedCanvas();
+    if (!offCanvas) return;
+
+    offCanvas.toBlob((blob) => {
+      if (!blob) return;
+      const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
+      const cleanName = cur.name.replace(/\.[^/.]+$/, '');
+      const fileName = `批改_${cleanName}_${timestamp}.png`;
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      const canShareFile = navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }));
+      if (canShareFile) {
+        navigator.share({
+          files: [file],
+          title: '作业批改',
+          text: '批改完成的作业'
+        }).then(() => {
+          showToast('分享成功');
+        }).catch((err) => {
+          if (err.name !== 'AbortError') {
+            console.error(err);
+            showToast('分享取消或失败');
+          }
+        });
+      } else {
+        // 不支持 Web Share API 时回退到导出下载
+        showToast('当前浏览器不支持分享，已切换为导出下载');
+        exportMergedImage();
+      }
+    }, 'image/png');
+  }
+
   // ==================== 提示组件 ====================
+  function showAppDialog({ title = '提示', message = '', input = false, value = '' } = {}) {
+    const modal = document.getElementById('appDialog');
+    const titleEl = document.getElementById('dialogTitle');
+    const messageEl = document.getElementById('dialogMessage');
+    const inputEl = document.getElementById('dialogInput');
+    const cancelEl = document.getElementById('dialogCancel');
+    const confirmEl = document.getElementById('dialogConfirm');
+    if (!modal || !titleEl || !messageEl || !inputEl || !cancelEl || !confirmEl) return Promise.resolve(null);
+
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    inputEl.value = value;
+    inputEl.hidden = !input;
+    cancelEl.textContent = input ? '取消' : '否';
+    confirmEl.textContent = input ? '确定' : '是';
+    modal.hidden = false;
+
+    return new Promise(resolve => {
+      let finished = false;
+      const close = result => {
+        if (finished) return;
+        finished = true;
+        modal.hidden = true;
+        cancelEl.onclick = null;
+        confirmEl.onclick = null;
+        modal.onkeydown = null;
+        resolve(result);
+      };
+      cancelEl.onclick = () => close(input ? null : false);
+      confirmEl.onclick = () => close(input ? inputEl.value : true);
+      modal.onkeydown = event => {
+        if (event.key === 'Escape') close(input ? null : false);
+        if (event.key === 'Enter' && input) close(inputEl.value);
+      };
+      setTimeout(() => (input ? inputEl : confirmEl).focus(), 0);
+    });
+  }
+
+  function showInputDialog(message, value = '') {
+    return showAppDialog({ title: '编辑批注', message, input: true, value });
+  }
+
+  function showConfirmDialog(message) {
+    return showAppDialog({ title: '请确认', message, input: false });
+  }
+
   function showToast(message) {
     const toast = document.createElement('div');
     toast.className = 'toast';
