@@ -815,16 +815,16 @@ button:focus-visible {
   position: absolute;
   inset: 20px;
   margin: auto;
-  max-width: 860px;
+  max-width: 800px;
   height: auto;
   max-height: calc(100% - 40px);
   overflow-y: auto;
   border: 2px dashed rgba(148, 163, 184, 0.5);
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-radius: var(--radius-lg);
-  padding: 30px;
+  padding: 36px 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -843,19 +843,12 @@ button:focus-visible {
 .welcome-container {
   display: flex;
   align-items: center;
-  gap: 36px;
+  justify-content: center;
+  gap: 40px;
   width: 100%;
 }
 
-/* 左侧/顶部立绘与头像展区 */
-.desktop-only {
-  display: flex;
-}
-
-.mobile-only {
-  display: none !important;
-}
-
+/* 左侧立绘展区：展示全部的图片 */
 .teacher-showcase {
   display: flex;
   flex-direction: column;
@@ -874,10 +867,10 @@ button:focus-visible {
 
 .teacher-figure-img {
   width: auto;
-  height: 290px;
+  height: 330px;
   max-width: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 10px 15px rgba(30, 41, 59, 0.15));
+  filter: drop-shadow(0 10px 18px rgba(30, 41, 59, 0.16));
   position: relative;
   z-index: 2;
   transition: transform 0.25s ease;
@@ -918,11 +911,11 @@ button:focus-visible {
 }
 
 .teacher-nameplate {
-  margin-top: 12px;
+  margin-top: 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 6px 14px;
+  padding: 6px 16px;
   background: linear-gradient(135deg, #f8fafc, #edf2f7);
   border: 1px solid #cbd5e1;
   border-radius: var(--radius-sm);
@@ -937,7 +930,7 @@ button:focus-visible {
 }
 
 .nameplate-desc {
-  font-size: 10px;
+  font-size: 10.5px;
   color: #64748b;
   margin-top: 2px;
 }
@@ -954,7 +947,7 @@ button:focus-visible {
 .welcome-header {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .welcome-badge {
@@ -971,37 +964,58 @@ button:focus-visible {
 }
 
 .welcome-title {
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.4px;
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 .welcome-desc {
-  font-size: 12.5px;
+  font-size: 13px;
   color: #64748b;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .upload-action-box {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
-  margin: 2px 0;
+  gap: 10px;
+  margin-top: 6px;
 }
 
 .welcome-upload-btn {
   display: inline-flex;
   align-items: center;
-  padding: 12px 26px;
-  font-size: 14px;
+  padding: 12px 28px;
+  font-size: 14.5px;
   font-weight: 700;
   background: linear-gradient(135deg, #1d4ed8, #2563eb);
   border-color: #1d4ed8;
   color: #fff;
   border-radius: var(--radius-pill);
+  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.28);
+  transition: all 0.16s ease;
+}
+
+.welcome-upload-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(29, 78, 216, 0.35);
+  background: linear-gradient(135deg, #1e40af, #1d4ed8);
+}
+
+.drag-paste-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+.drag-paste-tip strong {
+  color: #334155;
+}
   box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35);
   cursor: pointer;
   transition: all 0.16s ease;
@@ -1378,107 +1392,100 @@ button:focus-visible {
     font-size: 10px;
   }
 
-  /* 移动端白老师主题欢迎卡片：切换至大号金边圆形头像 */
-  .desktop-only {
-    display: none !important;
-  }
-  .mobile-only {
-    display: flex !important;
-  }
-  .teacher-avatar-showcase {
+  /* 移动端欢迎卡片：对称居中，放全部立绘图片，去掉冗余能力卡片 */
+  .drop-zone.teacher-theme-welcome {
+    inset: 10px;
+    margin: auto;
+    padding: 16px 14px;
+    max-height: calc(100% - 20px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin-bottom: 2px;
-  }
-  .teacher-big-avatar-wrap {
-    position: relative;
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    padding: 3px;
-    background: linear-gradient(135deg, #f59e0b, #d97706, #1d4ed8);
-    box-shadow: 0 4px 14px rgba(30, 58, 138, 0.22);
-  }
-  .teacher-big-avatar-img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-    background: #fff;
-    border: 2px solid #fff;
-    display: block;
-  }
-  .big-cert-badge {
-    position: absolute;
-    right: -2px;
-    bottom: -1px;
-    width: 20px;
-    height: 20px;
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 900;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-
-  /* 移动端欢迎卡片：左侧留出 68px 安全避让区，确保批注栏默认展开时内容完全无遮挡 */
-  .drop-zone.teacher-theme-welcome {
-    inset: 6px;
-    padding: 14px 10px 14px 68px;
-    max-height: calc(100% - 12px);
   }
   .welcome-container {
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
     gap: 10px;
     text-align: center;
+    width: 100%;
+    max-width: 360px;
+    margin: 0 auto;
   }
   .teacher-showcase {
     width: 100%;
+    align-items: center;
+  }
+  .teacher-figure-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .teacher-figure-img {
+    height: 220px;
+    max-height: 35vh;
+    width: auto;
+    object-fit: contain;
+  }
+  .figure-shadow {
+    width: 95px;
+    height: 9px;
+    margin-top: -5px;
   }
   .math-badge { display: none; }
+  .teacher-nameplate {
+    margin-top: 8px;
+    padding: 4px 12px;
+  }
+  .nameplate-title {
+    font-size: 12px;
+  }
+  .nameplate-desc {
+    font-size: 9.5px;
+  }
+
   .welcome-main {
     align-items: center;
     text-align: center;
-    gap: 10px;
+    gap: 8px;
+    width: 100%;
+  }
+  .welcome-header {
+    align-items: center;
+    text-align: center;
+    gap: 4px;
   }
   .welcome-badge {
     align-self: center;
+    font-size: 10px;
+    padding: 2px 8px;
   }
   .welcome-title {
-    font-size: 16px;
+    font-size: 15px;
+    line-height: 1.35;
+    margin-top: 2px;
   }
   .welcome-desc {
-    font-size: 11.5px;
+    display: none; /* 移动端隐藏较长描述，保持界面清爽 */
   }
   .upload-action-box {
     align-items: center;
     width: 100%;
+    margin-top: 4px;
   }
   .welcome-upload-btn {
     width: 100%;
+    max-width: 270px;
     justify-content: center;
-    padding: 10px 16px;
+    padding: 11px 18px;
     font-size: 13.5px;
   }
   .drag-paste-tip {
-    font-size: 11px;
+    font-size: 10.5px;
     flex-direction: column;
     gap: 2px;
   }
   .tip-sep { display: none; }
-  .features-grid {
-    grid-template-columns: 1fr;
-    width: 100%;
-    gap: 6px;
-  }
-  .feature-card {
-    padding: 8px 10px;
-  }
 }
