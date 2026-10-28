@@ -697,6 +697,20 @@
         const now = Date.now();
         if (state.lastTextTap.item === dblTapTextItem && now - state.lastTextTap.time < 400) {
           state.lastTextTap = { item: null, time: 0 };
+          // 打开输入框后，画布不应继续持有本次 pointer 会话。
+          // 否则弹窗期间的 pointerup/pointermove 可能把画布卡在旧状态，
+          // 后续缩放及其他批注操作都会被误判为文字图元交互。
+          if (vp.hasPointerCapture && vp.hasPointerCapture(e.pointerId)) {
+            vp.releasePointerCapture(e.pointerId);
+          }
+          state.activePointers.delete(e.pointerId);
+          if (state.activePointers.size === 0) {
+            state.suppressDrawingUntilAllUp = false;
+            state.pinch.active = false;
+          }
+          state.isDrawing = false;
+          state.currentDraft = null;
+          state.itemInteraction = null;
           const newText = await showInputDialog('请输入新的批改评语或分值：', dblTapTextItem.text || '');
           if (newText !== null && newText.trim()) {
             pushUndo();
@@ -769,6 +783,19 @@
 
       // 文字工具：在空白区域点击弹出输入框新建文字
       if (state.activeTool === 'text') {
+        // 输入框属于独立的 UI 交互，先释放画布 pointer capture，
+        // 避免确认/取消弹窗时污染画布的缩放与批注状态。
+        if (vp.hasPointerCapture && vp.hasPointerCapture(e.pointerId)) {
+          vp.releasePointerCapture(e.pointerId);
+        }
+        state.activePointers.delete(e.pointerId);
+        if (state.activePointers.size === 0) {
+          state.suppressDrawingUntilAllUp = false;
+          state.pinch.active = false;
+        }
+        state.isDrawing = false;
+        state.currentDraft = null;
+        state.itemInteraction = null;
         const text = await showInputDialog('请输入批改评语或分值：', '');
         if (text && text.trim()) {
           pushUndo();
