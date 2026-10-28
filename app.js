@@ -88,7 +88,11 @@
     thumbScroll: document.getElementById('thumbScroll'),
     thumbCount: document.getElementById('thumbCount'),
     btnAddMoreImages: document.getElementById('btnAddMoreImages'),
-    toastContainer: document.getElementById('toastContainer')
+    toastContainer: document.getElementById('toastContainer'),
+    floatingToolbar: document.getElementById('floatingToolbar'),
+    btnToggleToolbar: document.getElementById('btnToggleToolbar'),
+    toggleToolbarIcon: document.getElementById('toggleToolbarIcon'),
+    floatingProps: document.getElementById('floatingProps')
   };
 
   const ctx = dom.canvas.getContext('2d');
@@ -105,6 +109,12 @@
     bindCanvasEvents();
     bindImageImport();
     bindShortcuts();
+
+    // 移动端在空状态下默认收起工具栏，避免遮挡欢迎卡片
+    if (window.innerWidth <= 768 && state.images.length === 0) {
+      setToolbarCollapsed(true);
+    }
+
     render();
   }
 
@@ -194,6 +204,8 @@
             updateThumbnails();
             switchImage(initialIndex);
             dom.dropZone.style.display = 'none';
+            if (dom.floatingProps) dom.floatingProps.style.display = 'flex';
+            setToolbarCollapsed(false);
             showToast(`已加载 ${files.length} 张作业图片`);
           }
         };
@@ -207,6 +219,7 @@
     if (index < 0 || index >= state.images.length) return;
     state.currentIndex = index;
     state.selectedItem = null;
+    if (dom.floatingProps) dom.floatingProps.style.display = 'flex';
     updateSelectedStampUI();
     updateThumbnails();
     updateDocInfo();
@@ -264,6 +277,8 @@
     if (state.images.length === 0) {
       state.currentIndex = -1;
       dom.dropZone.style.display = 'flex';
+      if (dom.floatingProps) dom.floatingProps.style.display = 'none';
+      if (window.innerWidth <= 768) setToolbarCollapsed(true);
       updateThumbnails();
       updateDocInfo();
       render();
@@ -370,7 +385,31 @@
   }
 
   // ==================== 工具栏与配置绑定 ====================
+  function toggleToolbar() {
+    if (!dom.floatingToolbar) return;
+    const isCollapsed = dom.floatingToolbar.classList.toggle('collapsed');
+    if (dom.toggleToolbarIcon) {
+      dom.toggleToolbarIcon.textContent = isCollapsed ? '▶' : '◀';
+    }
+  }
+
+  function setToolbarCollapsed(collapsed) {
+    if (!dom.floatingToolbar) return;
+    dom.floatingToolbar.classList.toggle('collapsed', !!collapsed);
+    if (dom.toggleToolbarIcon) {
+      dom.toggleToolbarIcon.textContent = collapsed ? '▶' : '◀';
+    }
+  }
+
   function bindToolbar() {
+    // 工具栏折叠与展开切换
+    if (dom.btnToggleToolbar) {
+      dom.btnToggleToolbar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleToolbar();
+      });
+    }
+
     // 切换工具
     dom.toolButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -1278,6 +1317,12 @@
     window.addEventListener('keydown', (e) => {
       // 避免输入框打字触发快捷键
       if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        toggleToolbar();
+        return;
+      }
 
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
         e.preventDefault();

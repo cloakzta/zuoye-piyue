@@ -71,48 +71,54 @@
 
   <!-- 主体工作区 -->
   <main class="app-main">
-    <!-- 左侧悬浮主工具栏 -->
-    <aside class="floating-toolbar">
-      <button class="tool-btn active" data-tool="pen" title="批改红笔 (P)">
-        <span class="tool-icon">🖊️</span>
-        <span class="tool-name">红笔</span>
+    <!-- 左侧悬浮主工具栏 (支持隐藏/展开折叠) -->
+    <aside class="floating-toolbar" id="floatingToolbar">
+      <!-- 极简收起/展开控制按钮 -->
+      <button class="toolbar-toggle-btn" id="btnToggleToolbar" title="收起/展开工具栏 (快捷键 Tab)" aria-label="收起/展开工具栏">
+        <span class="toggle-icon" id="toggleToolbarIcon">◀</span>
       </button>
-      <button class="tool-btn" data-tool="highlighter" title="荧光笔 (H)">
-        <span class="tool-icon">🖍️</span>
-        <span class="tool-name">荧光</span>
-      </button>
-      <button class="tool-btn" data-tool="stamp" title="批改印章 (S)">
-        <span class="tool-icon">💮</span>
-        <span class="tool-name">印章</span>
-      </button>
-      <button class="tool-btn" data-tool="rect" title="矩形框选 (R)">
-        <span class="tool-icon">⬜</span>
-        <span class="tool-name">框选</span>
-      </button>
-      <button class="tool-btn" data-tool="circle" title="圆形重点 (C)">
-        <span class="tool-icon">⭕</span>
-        <span class="tool-name">圈画</span>
-      </button>
-      <button class="tool-btn" data-tool="arrow" title="箭头指示 (A)">
-        <span class="tool-icon">↗️</span>
-        <span class="tool-name">箭头</span>
-      </button>
-      <button class="tool-btn" data-tool="text" title="文字评语 (T)">
-        <span class="tool-icon">🔤</span>
-        <span class="tool-name">文字</span>
-      </button>
-      <button class="tool-btn" data-tool="eraser" title="橡皮擦 (E)">
-        <span class="tool-icon">🧹</span>
-        <span class="tool-name">橡皮</span>
-      </button>
-      <button class="tool-btn" data-tool="pan" title="平移视角 (空格+拖拽)">
-        <span class="tool-icon">✋</span>
-        <span class="tool-name">抓手</span>
-      </button>
+      <div class="toolbar-items" id="toolbarItems">
+        <button class="tool-btn active" data-tool="pen" title="批改红笔 (P)">
+          <span class="tool-icon">🖊️</span>
+          <span class="tool-name">红笔</span>
+        </button>
+        <button class="tool-btn" data-tool="highlighter" title="荧光笔 (H)">
+          <span class="tool-icon">🖍️</span>
+          <span class="tool-name">荧光</span>
+        </button>
+        <button class="tool-btn" data-tool="stamp" title="批改印章 (S)">
+          <span class="tool-icon">💮</span>
+          <span class="tool-name">印章</span>
+        </button>
+        <button class="tool-btn" data-tool="rect" title="矩形框选 (R)">
+          <span class="tool-icon">⬜</span>
+          <span class="tool-name">框选</span>
+        </button>
+        <button class="tool-btn" data-tool="circle" title="圆形重点 (C)">
+          <span class="tool-icon">⭕</span>
+          <span class="tool-name">圈画</span>
+        </button>
+        <button class="tool-btn" data-tool="arrow" title="箭头指示 (A)">
+          <span class="tool-icon">↗️</span>
+          <span class="tool-name">箭头</span>
+        </button>
+        <button class="tool-btn" data-tool="text" title="文字评语 (T)">
+          <span class="tool-icon">🔤</span>
+          <span class="tool-name">文字</span>
+        </button>
+        <button class="tool-btn" data-tool="eraser" title="橡皮擦 (E)">
+          <span class="tool-icon">🧹</span>
+          <span class="tool-name">橡皮</span>
+        </button>
+        <button class="tool-btn" data-tool="pan" title="平移视角 (空格+拖拽)">
+          <span class="tool-icon">✋</span>
+          <span class="tool-name">抓手</span>
+        </button>
+      </div>
     </aside>
 
-    <!-- 顶部悬浮属性配置栏 (颜色/粗细/印章类型) -->
-    <section class="floating-props" id="floatingProps">
+    <!-- 顶部悬浮属性配置栏 (颜色/粗细/印章类型) - 仅在加载图片后显示 -->
+    <section class="floating-props" id="floatingProps" style="display: none;">
       <!-- 颜色选择器 -->
       <div class="prop-group" id="colorGroup">
         <span class="prop-label">颜色</span>
@@ -215,9 +221,10 @@
       <!-- 初始空状态引导区：白老师数学培优课堂专属主题布局 -->
       <div class="drop-zone teacher-theme-welcome" id="dropZone">
         <div class="welcome-container">
-          <!-- 左侧：白老师名师立绘形象展示 -->
+          <!-- 左侧/顶部：白老师名师形象展示 -->
           <div class="teacher-showcase">
-            <div class="teacher-figure-wrap">
+            <!-- 宽屏/桌面端展示立绘 -->
+            <div class="teacher-figure-wrap desktop-only">
               <img src="assets/teacher_full.png" alt="白老师" class="teacher-figure-img">
               <div class="figure-shadow"></div>
               <!-- 漂浮装饰数学微符号 -->
@@ -226,8 +233,17 @@
               <span class="math-badge m-b3">f(x)</span>
               <span class="math-badge m-b4">Δ</span>
             </div>
+
+            <!-- 手机端/小屏展示：大号高清圆形金边头像 (比例协调、清晰亲切) -->
+            <div class="teacher-avatar-showcase mobile-only">
+              <div class="teacher-big-avatar-wrap">
+                <img src="assets/teacher_avatar.png" alt="白老师" class="teacher-big-avatar-img">
+                <span class="big-cert-badge" title="特级名师认证">★</span>
+              </div>
+            </div>
+
             <div class="teacher-nameplate">
-              <span class="nameplate-title">白老师 · 特级数学</span>
+              <span class="nameplate-title">白老师 · 特级数学名师</span>
               <span class="nameplate-desc">专注思维培优 · 严谨批改</span>
             </div>
           </div>
