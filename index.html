@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>作业批改助手 - 轻量图片在线批阅与导出</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 顶栏导航 -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="app-logo">
+        <span class="logo-icon">✏️</span>
+        <span class="logo-title">作业批阅助手</span>
+      </div>
+      <div class="doc-info" id="docInfo" style="display: none;">
+        <span class="filename" id="docFilename">未命名作业</span>
+        <span class="filesize-badge" id="docResolution">0 × 0</span>
+      </div>
+    </div>
+
+    <!-- 顶部居中快捷操作：撤销/重做/缩放 -->
+    <div class="header-center">
+      <div class="btn-group">
+        <button class="icon-btn" id="btnUndo" title="撤销 (Ctrl+Z)" disabled>
+          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
+        </button>
+        <button class="icon-btn" id="btnRedo" title="重做 (Ctrl+Y)" disabled>
+          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/></svg>
+        </button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="zoom-controls">
+        <button class="icon-btn" id="btnZoomOut" title="缩小 (滚轮下滑)">−</button>
+        <span class="zoom-text" id="zoomLevel">100%</span>
+        <button class="icon-btn" id="btnZoomIn" title="放大 (滚轮上滑)">＋</button>
+        <button class="text-btn" id="btnFitScreen" title="自适应窗口大小">适应</button>
+        <button class="text-btn" id="btnActualSize" title="1:1 原始像素">1:1</button>
+      </div>
+    </div>
+
+    <!-- 顶部右侧：导入与导出 -->
+    <div class="header-right">
+      <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
+      <label class="action-btn secondary" id="btnImport" for="fileInput" role="button" title="选择并导入作业照片">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+        <span>添加图片</span>
+      </label>
+      <button class="action-btn secondary" id="btnCopyImage" title="复制批阅图到剪贴板">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+        <span>复制图片</span>
+      </button>
+      <button class="action-btn primary" id="btnExport">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z"/></svg>
+        <span>导出批改图</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 主体工作区 -->
+  <main class="app-main">
+    <!-- 左侧悬浮主工具栏 -->
+    <aside class="floating-toolbar">
+      <button class="tool-btn active" data-tool="pen" title="批改红笔 (P)">
+        <span class="tool-icon">🖊️</span>
+        <span class="tool-name">红笔</span>
+      </button>
+      <button class="tool-btn" data-tool="highlighter" title="荧光笔 (H)">
+        <span class="tool-icon">🖍️</span>
+        <span class="tool-name">荧光</span>
+      </button>
+      <button class="tool-btn" data-tool="stamp" title="批改印章 (S)">
+        <span class="tool-icon">💮</span>
+        <span class="tool-name">印章</span>
+      </button>
+      <button class="tool-btn" data-tool="rect" title="矩形框选 (R)">
+        <span class="tool-icon">⬜</span>
+        <span class="tool-name">框选</span>
+      </button>
+      <button class="tool-btn" data-tool="circle" title="圆形重点 (C)">
+        <span class="tool-icon">⭕</span>
+        <span class="tool-name">圈画</span>
+      </button>
+      <button class="tool-btn" data-tool="arrow" title="箭头指示 (A)">
+        <span class="tool-icon">↗️</span>
+        <span class="tool-name">箭头</span>
+      </button>
+      <button class="tool-btn" data-tool="text" title="文字评语 (T)">
+        <span class="tool-icon">🔤</span>
+        <span class="tool-name">文字</span>
+      </button>
+      <button class="tool-btn" data-tool="eraser" title="橡皮擦 (E)">
+        <span class="tool-icon">🧹</span>
+        <span class="tool-name">橡皮</span>
+      </button>
+      <button class="tool-btn" data-tool="pan" title="平移视角 (空格+拖拽)">
+        <span class="tool-icon">✋</span>
+        <span class="tool-name">抓手</span>
+      </button>
+    </aside>
+
+    <!-- 顶部悬浮属性配置栏 (颜色/粗细/印章类型) -->
+    <section class="floating-props" id="floatingProps">
+      <!-- 颜色选择器 -->
+      <div class="prop-group" id="colorGroup">
+        <span class="prop-label">颜色</span>
+        <div class="color-palette">
+          <button class="color-dot active" data-color="#e53e3e" style="background: #e53e3e;" title="教师正红"></button>
+          <button class="color-dot" data-color="#38a169" style="background: #38a169;" title="对勾绿"></button>
+          <button class="color-dot" data-color="#ecc94b" style="background: #ecc94b;" title="重点黄"></button>
+          <button class="color-dot" data-color="#3182ce" style="background: #3182ce;" title="标准蓝"></button>
+          <button class="color-dot" data-color="#805ad5" style="background: #805ad5;" title="典雅紫"></button>
+          <button class="color-dot" data-color="#dd6b20" style="background: #dd6b20;" title="警示橙"></button>
+          <button class="color-dot" data-color="#1a202c" style="background: #1a202c;" title="墨黑"></button>
+          <input type="color" id="customColorPicker" value="#e53e3e" class="custom-color-input" title="自定义颜色">
+        </div>
+      </div>
+
+      <!-- 粗细选择器 -->
+      <div class="prop-group" id="sizeGroup">
+        <span class="prop-label">粗细</span>
+        <div class="size-slider-wrap">
+          <input type="range" id="sizeSlider" min="1" max="40" value="4">
+          <span class="size-val" id="sizeVal">4px</span>
+        </div>
+      </div>
+
+      <!-- 橡皮擦范围（仅选择橡皮时展示） -->
+      <div class="prop-group" id="eraserSizeGroup" style="display: none;">
+        <span class="prop-label">擦除范围</span>
+        <div class="size-slider-wrap">
+          <input type="range" id="eraserSizeSlider" min="8" max="96" value="32">
+          <span class="size-val" id="eraserSizeVal">32px</span>
+        </div>
+      </div>
+
+      <!-- 印章选择器（当选中印章工具时展示） -->
+      <div class="prop-group" id="stampGroup" style="display: none;">
+        <span class="prop-label">批阅印章</span>
+        <div class="stamp-picker">
+          <button class="stamp-btn active" data-stamp="check" title="正确 (对勾)">✔ 正确</button>
+          <button class="stamp-btn" data-stamp="cross" title="错误 (打叉)">✘ 订正</button>
+          <button class="stamp-btn" data-stamp="score100" title="100分">💯 100</button>
+          <button class="stamp-btn" data-stamp="great" title="优秀">👍 优秀</button>
+          <button class="stamp-btn" data-stamp="read" title="已阅">⭐ 阅</button>
+          <button class="stamp-btn" data-stamp="question" title="疑问">❓ 疑问</button>
+        </div>
+      </div>
+
+      <!-- 选中印章时的放大缩小与清除操作 -->
+      <div class="prop-group" id="selectedStampOps" style="display: none;">
+        <span class="prop-label">选中印章</span>
+        <div class="stamp-ops">
+          <button class="stamp-op-btn" id="btnScaleUp" title="放大印章">➕<span>放大</span></button>
+          <button class="stamp-op-btn" id="btnScaleDown" title="缩小印章">➖<span>缩小</span></button>
+          <button class="stamp-op-btn danger" id="btnDeleteSelectedStamp" title="删除该印章 (Delete)">🗑️<span>清除</span></button>
+        </div>
+      </div>
+
+      <!-- 清屏与快捷操作 -->
+      <div class="prop-group ml-auto">
+        <button class="danger-btn" id="btnClearAnnotations" title="清空当前所有批注">
+          <svg viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:3px;"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>清空批注
+        </button>
+      </div>
+    </section>
+
+    <!-- 画布容器 -->
+    <div class="canvas-viewport" id="canvasViewport">
+      <!-- 初始空状态引导区 -->
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-icon">📑</div>
+        <h2>导入作业图片开始批阅</h2>
+        <p>点击选择文件、直接拖入作业图片，或按 <strong>Ctrl+V / Cmd+V</strong> 粘贴截图</p>
+        <label class="action-btn primary large" id="btnSelectFilePrompt" for="fileInput" role="button" title="点击选择作业图片">
+          选择作业图片 (支持多选)
+        </label>
+        <div class="drop-hint">支持 JPG、PNG、WebP 等常见图片格式，保持高保真分辨率</div>
+      </div>
+
+      <!-- 核心画布元素 -->
+      <canvas id="mainCanvas"></canvas>
+    </div>
+
+    <!-- 底部多图批阅任务栏（多图导入时显示） -->
+    <footer class="thumbnail-strip" id="thumbnailStrip" style="display: none;">
+      <div class="thumb-header">
+        <span>作业批改列表 (<span id="thumbCount">0</span>)</span>
+        <label class="thumb-add-btn" id="btnAddMoreImages" for="fileInput" role="button">+ 追加图片</label>
+      </div>
+      <div class="thumb-scroll" id="thumbScroll">
+        <!-- 缩略图项动态注入 -->
+      </div>
+    </footer>
+  </main>
+
+  <!-- 提示弹窗 (Toast) -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
